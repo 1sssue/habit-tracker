@@ -2,181 +2,298 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaStar } from "react-icons/fa";
+import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic } from "react-icons/fa";
 import StatChart from "../components/StatChart";
+import { keyframes } from "styled-components";
 
-const Container = styled.div`
+const PageWrapper = styled.div`
   min-height: 100vh;
-  padding: 40px;
-  background-color: ${(props) => props.theme.bg}; 
+  width: 100%;
+  background-color: ${(props) => props.theme.bg};
   color: ${(props) => props.theme.text};
-  font-family: 'Segoe UI', sans-serif;
-  transition: all 0.3s ease; 
-`;
-
-const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  justify-content: center;
+  padding: 20px 16px 60px 16px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  
+  @media (min-width: 768px) {
+    padding: 40px 24px 80px 24px;
+  }
 `;
 
-const Title = styled.h1`
-  color: ${(props) => props.theme.text};
-  transition: color 0.3s ease;
-`;
-
-const Controls = styled.div`
+const MainContainer = styled.div`
+  width: 100%;
+  max-width: 768px;
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const HeaderBar = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  @media (min-width: 600px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+`;
+
+const Greeting = styled.h1`
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+  
+  span { color: #6a11cb; }
+
+  @media (min-width: 600px) {
+    font-size: 2.2rem;
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 12px;
   align-items: center;
 `;
 
-const ThemeBtn = styled.button`
-  background: transparent;
+const IconButton = styled.button`
+  background: ${(props) => props.theme.cardBg};
   color: ${(props) => props.theme.text};
   border: 1px solid ${(props) => props.theme.border};
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  transition: all 0.3s ease;
-  &:hover { background: ${(props) => props.theme.cardBg}; }
-`;
-
-const LogoutBtn = styled.button`
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
   cursor: pointer;
-  &:hover { background: #ee5253; }
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* Ніколи не сплющується */
+  
+  &:hover { background: ${(props) => props.theme.border}; transform: translateY(-2px); }
+  &:active { transform: translateY(0); }
 `;
 
-const AIBtn = styled.button`
+const OutlineButton = styled.button`
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+  padding: 0 20px;
+  height: 48px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover { background: rgba(255, 107, 107, 0.1); border-color: #ff6b6b; }
+`;
+
+const AICard = styled.div`
+  background: linear-gradient(135deg, rgba(106, 17, 203, 0.05) 0%, rgba(37, 117, 252, 0.05) 100%);
+  border: 1px solid rgba(106, 17, 203, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const AITrigger = styled.button`
   background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
+  height: 52px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1.05rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  width: 100%;
   justify-content: center;
-  transition: transform 0.2s;
-  &:hover { transform: scale(1.01); }
-  &:disabled { opacity: 0.7; cursor: not-allowed; }
-`;
-
-const AIBox = styled.div`
-  background: ${(props) => props.theme.cardBg};
-  border-left: 5px solid #6a11cb;
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-style: italic;
-  color: ${(props) => props.theme.text};
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  line-height: 1.5;
-`;
-
-const Form = styled.form`
-  display: flex;
   gap: 10px;
-  margin-bottom: 30px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(106, 17, 203, 0.25);
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(106, 17, 203, 0.35); }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: 0.7; cursor: wait; }
+`;
+
+const AIResponse = styled.div`
+  font-size: 1rem;
+  line-height: 1.6;
+  color: ${(props) => props.theme.text};
+  padding: 16px;
+  background: ${(props) => props.theme.cardBg};
+  border-radius: 12px;
+  border-left: 4px solid #6a11cb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+`;
+
+const AddHabitForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: ${(props) => props.theme.cardBg};
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid ${(props) => props.theme.border};
+  
+  @media (min-width: 600px) {
+    flex-direction: row;
+  }
 `;
 
-const Input = styled.input`
+const CustomInput = styled.input`
   flex: 1;
-  padding: 12px;
-  border: 1px solid ${(props) => props.theme.border};
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid ${(props) => props.theme.border};
   background: ${(props) => props.theme.bg};
   color: ${(props) => props.theme.text};
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s;
+  
+  &:focus { border-color: #1dd1a1; }
+  &::placeholder { color: ${(props) => props.theme.textSec}; }
 `;
 
-const AddBtn = styled.button`
+const PrimaryButton = styled.button`
   background: #1dd1a1;
   color: white;
   border: none;
-  padding: 0 25px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  &:hover { background: #10ac84; }
-`;
-
-const List = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-const HabitCard = styled.div`
-  background: ${(props) => props.theme.cardBg};
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-  
-  &:hover { transform: translateY(-2px); }
-`;
-
-const HabitInfo = styled.div`
-  h3 { margin: 0; color: ${(props) => props.theme.text}; }
-  p { margin: 5px 0 0; color: ${(props) => props.theme.textSec}; font-size: 0.9em; }
-`;
-
-const Actions = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const CheckBtn = styled.button`
-  background: ${(props) => props.$done ? '#1dd1a1' : props.theme.bg};
-  color: ${(props) => props.$done ? 'white' : props.theme.textSec};
-  border: 1px solid ${(props) => props.theme.border};
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
+  height: 52px;
+  padding: 0 24px;
+  border-radius: 14px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  gap: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
   
-  &:hover { border-color: #1dd1a1; }
+  &:hover { background: #10ac84; transform: translateY(-2px); }
+  &:active { transform: translateY(0); }
 `;
 
-const DeleteBtn = styled.button`
-  background: transparent;
-  color: #ff6b6b;
-  border: none;
+const HabitsGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const HabitItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: ${(props) => props.theme.cardBg};
+  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border: 1px solid ${(props) => props.theme.border};
+  transition: all 0.2s ease;
+  
+  &:hover { border-color: #1dd1a1; box-shadow: 0 6px 16px rgba(29, 209, 161, 0.1); }
+`;
+
+const HabitContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  p {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: ${(props) => props.theme.textSec};
+  }
+`;
+
+const HabitControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+`;
+
+const CheckCircle = styled.button`
+  width: 48px;
+  height: 48px;
+
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background: ${(props) => props.$done ? 'linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%)' : 'transparent'};
+  border: 3px solid ${(props) => props.$done ? 'transparent' : props.theme.border};
+  color: white;
   cursor: pointer;
-  font-size: 1.2em;
-  opacity: 0.5;
-  &:hover { opacity: 1; }
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  animation: ${(props) => props.$done ? popAnimation : 'none'} 0.4s ease forwards;
+
+  &:hover {
+    border-color: #1dd1a1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 209, 161, 0.2);
+  }
+
+  svg {
+    opacity: ${(props) => props.$done ? 1 : 0};
+    transform: scale(${(props) => props.$done ? 1 : 0});
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+`;
+
+const DeleteIcon = styled.button`
+  background: transparent;
+  color: ${(props) => props.theme.textSec};
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  
+  &:hover { color: #ff6b6b; }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: ${(props) => props.theme.textSec};
+  background: ${(props) => props.theme.cardBg};
+  border-radius: 20px;
+  border: 1px dashed ${(props) => props.theme.border};
+`;
+
+const popAnimation = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 `;
 
 const Home = ({ toggleTheme, currentTheme }) => {
@@ -188,7 +305,6 @@ const Home = ({ toggleTheme, currentTheme }) => {
   
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
-  
   const [aiAdvice, setAiAdvice] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
@@ -219,14 +335,13 @@ const Home = ({ toggleTheme, currentTheme }) => {
       setAiAdvice(res.data.advice);
     } catch (err) {
       setAiAdvice("Не вдалося підключитися до помічника 😔");
-      console.error(err);
     }
     setIsAiLoading(false);
   };
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!newHabit) return;
+    if (!newHabit.trim()) return;
     try {
       const config = { headers: { "auth-token": user?.token } };
       const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/habits", { title: newHabit }, config);
@@ -271,62 +386,71 @@ const Home = ({ toggleTheme, currentTheme }) => {
   if (!user) return null;
 
   return (
-    <Container>
-      <Header>
-        <Title>Привіт, {user?.username} 👋</Title>
-        <Controls>
-          <ThemeBtn onClick={toggleTheme} title="Змінити тему">
-            {currentTheme === 'light' ? <FaMoon /> : <FaSun />}
-          </ThemeBtn>
-          <LogoutBtn onClick={logout}>Вийти</LogoutBtn>
-        </Controls>
-      </Header>
+    <PageWrapper>
+      <MainContainer>
+        
+        <HeaderBar>
+          <Greeting>Привіт, <span>{user?.username}</span> 👋</Greeting>
+          <HeaderActions>
+            <IconButton onClick={toggleTheme} title="Змінити тему">
+              {currentTheme === 'light' ? <FaMoon /> : <FaSun />}
+            </IconButton>
+            <OutlineButton onClick={logout}>Вийти</OutlineButton>
+          </HeaderActions>
+        </HeaderBar>
 
-      <AIBtn onClick={getAIAdvice} disabled={isAiLoading}>
-        <FaStar /> {isAiLoading ? "ШІ думає..." : "Отримати пораду від ШІ"}
-      </AIBtn>
+        <AICard>
+          <AITrigger onClick={getAIAdvice} disabled={isAiLoading}>
+            <FaMagic /> {isAiLoading ? "Аналізую твої звички..." : "ШІ Асистент"}
+          </AITrigger>
+          {aiAdvice && <AIResponse>✨ {aiAdvice}</AIResponse>}
+        </AICard>
 
-      {aiAdvice && (
-        <AIBox>
-          ✨ <b>ШІ-помічник каже:</b> <br/> {aiAdvice}
-        </AIBox>
-      )}
+        <AddHabitForm onSubmit={handleAdd}>
+          <CustomInput 
+            placeholder="Наприклад: Читати 20 сторінок..." 
+            value={newHabit}
+            onChange={(e) => setNewHabit(e.target.value)}
+          />
+          <PrimaryButton type="submit"><FaPlus /> Додати</PrimaryButton>
+        </AddHabitForm>
 
-      <Form onSubmit={handleAdd}>
-        <Input 
-          placeholder="Яку нову звичку хочеш розвинути?" 
-          value={newHabit}
-          onChange={(e) => setNewHabit(e.target.value)}
-        />
-        <AddBtn type="submit"><FaPlus /> Додати</AddBtn>
-      </Form>
+        <HabitsGrid>
+          {habits.map((habit) => (
+            <HabitItem key={habit._id}>
+              <HabitContent>
+                <h3>{habit.title}</h3>
+                <p>🔥 Серія: {habit.completedDates.length} днів</p>
+              </HabitContent>
+              <HabitControls>
+                <CheckCircle 
+                  $done={isDoneToday(habit)} 
+                  onClick={() => handleToggle(habit._id)}
+                >
+                  <FaCheck />
+                </CheckCircle>
+                <DeleteIcon onClick={() => handleDelete(habit._id)}>
+                  <FaTrash />
+                </DeleteIcon>
+              </HabitControls>
+            </HabitItem>
+          ))}
+          
+          {habits.length === 0 && (
+            <EmptyState>
+              <p>У тебе ще немає звичок. Час створити першу! 🚀</p>
+            </EmptyState>
+          )}
+        </HabitsGrid>
 
-      <List>
-        {habits.map((habit) => (
-          <HabitCard key={habit._id}>
-            <HabitInfo>
-              <h3>{habit.title}</h3>
-              <p>🔥 Серія: {habit.completedDates.length} днів</p>
-            </HabitInfo>
-            <Actions>
-              <CheckBtn 
-                $done={isDoneToday(habit)} 
-                onClick={() => handleToggle(habit._id)}
-              >
-                <FaCheck />
-              </CheckBtn>
-              <DeleteBtn onClick={() => handleDelete(habit._id)}>
-                <FaTrash />
-              </DeleteBtn>
-            </Actions>
-          </HabitCard>
-        ))}
-        {habits.length === 0 && <p style={{textAlign:'center', color:'#888'}}>Поки що немає звичок. Створи першу!</p>}
-      </List>
+        {habits.length > 0 && (
+          <div style={{ background: 'var(--card-bg, transparent)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-color, transparent)' }}>
+            <StatChart habits={habits} currentTheme={currentTheme} />
+          </div>
+        )}
 
-      {habits.length > 0 && <StatChart habits={habits} />}
-      
-    </Container>
+      </MainContainer>
+    </PageWrapper>
   );
 };
 
