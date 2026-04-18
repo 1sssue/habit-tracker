@@ -31,7 +31,7 @@ const ResetPassword = ({ toggleTheme, currentTheme }) => {
 
     setIsLoading(true);
     try {
-      await axios.post(`http://localhost:5000/api/auth/reset-password/${id}/${token}`, { password });
+      await axios.post(`https://habit-tracker-wtyx.onrender.com/api/auth/reset-password/${id}/${token}`, { password });
       alert("🎉 Пароль успішно змінено! Тепер ти можеш увійти з новим паролем.");
       navigate("/login");
     } catch (err) {
