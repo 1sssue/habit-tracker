@@ -24,7 +24,7 @@ const ForgotPassword = ({ toggleTheme, currentTheme }) => {
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(""); setMessage(""); setIsLoading(true);
     try {
-      const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/auth/forgot-password", { email });
+      const res = await axios.post("https://habit-tracker-ten-sepia.vercel.app/api/auth/forgot-password", { email });
       setMessage(res.data.message);
       setEmail("");
     } catch (err) {
