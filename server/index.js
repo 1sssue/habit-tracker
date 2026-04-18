@@ -7,6 +7,9 @@ const mongoose = require('mongoose');
 const authRoute = require('./routes/auth');
 const habitRoute = require('./routes/habits');
 const aiRoute = require('./routes/ai');
+const startCronJobs = require('./cron');
+
+startCronJobs();
 
 dotenv.config();
 

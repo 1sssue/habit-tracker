@@ -15,6 +15,7 @@ router.post('/', verify, async (req, res) => {
     const newHabit = new Habit({
         title: req.body.title,
         description: req.body.description,
+        reminderTime: req.body.reminderTime || "",
         userId: req.user._id
     });
 
@@ -30,14 +31,13 @@ router.put('/:id/edit', verify, async (req, res) => {
     try {
         const habit = await Habit.findById(req.params.id);
         
-        // Перевіряємо, чи звичка належить користувачу, який робить запит
         if (habit.userId !== req.user._id) {
             return res.status(403).json("Ви можете редагувати лише свої звички!");
         }
 
-        // Оновлюємо дані
         habit.title = req.body.title;
         habit.description = req.body.description;
+        habit.reminderTime = req.body.reminderTime || "";
 
         const updatedHabit = await habit.save();
         res.json(updatedHabit);
