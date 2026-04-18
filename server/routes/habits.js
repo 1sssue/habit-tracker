@@ -26,6 +26,26 @@ router.post('/', verify, async (req, res) => {
     }
 });
 
+router.put('/:id/edit', verify, async (req, res) => {
+    try {
+        const habit = await Habit.findById(req.params.id);
+        
+        // Перевіряємо, чи звичка належить користувачу, який робить запит
+        if (habit.userId !== req.user._id) {
+            return res.status(403).json("Ви можете редагувати лише свої звички!");
+        }
+
+        // Оновлюємо дані
+        habit.title = req.body.title;
+        habit.description = req.body.description;
+
+        const updatedHabit = await habit.save();
+        res.json(updatedHabit);
+    } catch (err) {
+        res.status(500).json({ message: err });
+    }
+});
+
 router.put('/:id/toggle', verify, async (req, res) => {
     try {
         const habit = await Habit.findById(req.params.id);

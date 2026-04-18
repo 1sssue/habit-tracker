@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,23 +9,20 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  overflow-x: hidden; /* Заборона прокрутки вбік */
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #1a1a2e; /* Темний фон підстраховки */
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-color: var(--bg-fallback, #1a1a2e);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
 }
 
-input, button, textarea {
+input, button, textarea, select {
   font-family: inherit;
-  font-size: inherit;
   outline: none;
 }

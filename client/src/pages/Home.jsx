@@ -1,386 +1,261 @@
 import { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic } from "react-icons/fa";
+import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic, FaEdit, FaSave, FaTimes, FaSortAmountDown } from "react-icons/fa";
 import StatChart from "../components/StatChart";
-import { keyframes } from "styled-components";
 
 const PageWrapper = styled.div`
-  min-height: 100vh;
-  width: 100%;
-  background-color: ${(props) => props.theme.bg};
-  color: ${(props) => props.theme.text};
-  display: flex;
-  justify-content: center;
-  padding: 20px 16px 60px 16px;
+  min-height: 100vh; width: 100%; background-color: ${(props) => props.theme.bg}; color: ${(props) => props.theme.text};
+  display: flex; justify-content: center; 
+  padding: 15px 12px 60px 12px; /* Меньші відступи на телефоні для економії місця */
   transition: background-color 0.3s ease, color 0.3s ease;
-  
-  @media (min-width: 768px) {
-    padding: 40px 24px 80px 24px;
-  }
+  @media (min-width: 768px) { padding: 40px 24px 80px 24px; }
 `;
 
-const MainContainer = styled.div`
-  width: 100%;
-  max-width: 768px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-`;
+const MainContainer = styled.div` width: 100%; max-width: 768px; display: flex; flex-direction: column; gap: 20px; `;
 
 const HeaderBar = styled.header`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  
-  @media (min-width: 600px) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
+  display: flex; justify-content: space-between; align-items: center;
 `;
 
 const Greeting = styled.h1`
-  font-size: 1.8rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin: 0;
-  
-  span { color: #6a11cb; }
-
-  @media (min-width: 600px) {
-    font-size: 2.2rem;
-  }
+  font-size: 1.5rem; font-weight: 800; line-height: 1.2; margin: 0;
+  span { color: #1dd1a1; }
+  @media (min-width: 600px) { font-size: 2.2rem; }
 `;
 
-const HeaderActions = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-`;
+const HeaderActions = styled.div` display: flex; gap: 8px; align-items: center; `;
 
 const IconButton = styled.button`
-  background: ${(props) => props.theme.cardBg};
-  color: ${(props) => props.theme.text};
-  border: 1px solid ${(props) => props.theme.border};
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0; /* Ніколи не сплющується */
-  
+  background: ${(props) => props.theme.cardBg}; color: ${(props) => props.theme.text}; border: 1px solid ${(props) => props.theme.border};
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
   &:hover { background: ${(props) => props.theme.border}; transform: translateY(-2px); }
-  &:active { transform: translateY(0); }
 `;
 
 const OutlineButton = styled.button`
-  background: transparent;
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 107, 107, 0.5);
-  padding: 0 20px;
-  height: 48px;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
+  background: transparent; color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.5); padding: 0 16px; height: 44px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;
   &:hover { background: rgba(255, 107, 107, 0.1); border-color: #ff6b6b; }
 `;
 
-const AICard = styled.div`
-  background: linear-gradient(135deg, rgba(106, 17, 203, 0.05) 0%, rgba(37, 117, 252, 0.05) 100%);
-  border: 1px solid rgba(106, 17, 203, 0.2);
-  border-radius: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
+const AICard = styled.div` background: linear-gradient(135deg, rgba(106, 17, 203, 0.05) 0%, rgba(37, 117, 252, 0.05) 100%); border: 1px solid rgba(106, 17, 203, 0.2); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; `;
 
 const AITrigger = styled.button`
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  color: white;
-  border: none;
-  height: 52px;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 1.05rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  box-shadow: 0 8px 16px rgba(106, 17, 203, 0.25);
-  transition: all 0.2s ease;
-  
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; height: 48px; border-radius: 14px; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 8px 16px rgba(106, 17, 203, 0.25); transition: all 0.2s;
   &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(106, 17, 203, 0.35); }
-  &:active:not(:disabled) { transform: translateY(0); }
   &:disabled { opacity: 0.7; cursor: wait; }
 `;
 
-const AIResponse = styled.div`
-  font-size: 1rem;
-  line-height: 1.6;
-  color: ${(props) => props.theme.text};
-  padding: 16px;
-  background: ${(props) => props.theme.cardBg};
-  border-radius: 12px;
-  border-left: 4px solid #6a11cb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+const AIResponse = styled.div` font-size: 0.95rem; line-height: 1.5; color: ${(props) => props.theme.text}; padding: 16px; background: ${(props) => props.theme.cardBg}; border-radius: 12px; border-left: 4px solid #6a11cb; box-shadow: 0 2px 8px rgba(0,0,0,0.04); `;
+
+
+const FormCard = styled.form` 
+  display: flex; flex-direction: column; 
+  background: ${(props) => props.theme.cardBg}; 
+  border-radius: 20px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+  border: 1px solid ${(props) => props.theme.border}; 
+  overflow: hidden; /* Щоб зберегти заокруглення */
+  transition: border-color 0.3s;
+  &:focus-within { border-color: #1dd1a1; } /* Підсвічуємо всю картку, коли користувач вводить текст */
 `;
 
-const AddHabitForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: ${(props) => props.theme.cardBg};
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  border: 1px solid ${(props) => props.theme.border};
-  
-  @media (min-width: 600px) {
-    flex-direction: row;
-  }
+const InputsWrapper = styled.div`
+  display: flex; flex-direction: column; gap: 8px; padding: 16px 20px;
 `;
 
-const CustomInput = styled.input`
-  flex: 1;
-  height: 52px;
-  padding: 0 16px;
-  border-radius: 14px;
-  border: 2px solid ${(props) => props.theme.border};
-  background: ${(props) => props.theme.bg};
-  color: ${(props) => props.theme.text};
-  transition: border-color 0.2s;
-  
-  &:focus { border-color: #1dd1a1; }
-  &::placeholder { color: ${(props) => props.theme.textSec}; }
+const CleanInput = styled.input` 
+  border: none; background: transparent; color: ${(props) => props.theme.text}; 
+  font-size: 1.15rem; font-weight: 600; width: 100%;
+  &::placeholder { color: ${(props) => props.theme.textSec}; opacity: 0.6; font-weight: 500; } 
+  &:focus { outline: none; } 
 `;
 
-const PrimaryButton = styled.button`
-  background: #1dd1a1;
-  color: white;
-  border: none;
-  height: 52px;
-  padding: 0 24px;
-  border-radius: 14px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-  
-  &:hover { background: #10ac84; transform: translateY(-2px); }
-  &:active { transform: translateY(0); }
+const CleanTextarea = styled.textarea` 
+  border: none; background: transparent; color: ${(props) => props.theme.textSec}; 
+  font-family: inherit; font-size: 0.95rem; width: 100%; 
+  resize: none; min-height: 40px; overflow-y: hidden;
+  &::placeholder { color: ${(props) => props.theme.textSec}; opacity: 0.5; } 
+  &:focus { outline: none; color: ${(props) => props.theme.text}; } 
 `;
 
-const HabitsGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+const FormActions = styled.div`
+  display: flex; justify-content: flex-end; padding: 10px 16px 16px 16px;
 `;
 
-const HabitItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: ${(props) => props.theme.cardBg};
-  padding: 16px 20px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  border: 1px solid ${(props) => props.theme.border};
-  transition: all 0.2s ease;
-  
-  &:hover { border-color: #1dd1a1; box-shadow: 0 6px 16px rgba(29, 209, 161, 0.1); }
+const PrimaryButton = styled.button` 
+  background: #1dd1a1; color: white; border: none; height: 44px; padding: 0 20px; border-radius: 12px; 
+  font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; 
+  &:hover { background: #10ac84; transform: translateY(-2px); } 
 `;
 
-const HabitContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  
-  h3 {
-    margin: 0;
-    font-size: 1.15rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  p {
-    margin: 4px 0 0 0;
-    font-size: 0.9rem;
-    color: ${(props) => props.theme.textSec};
-  }
+const ListHeader = styled.div`
+  display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  h2 { margin: 0; font-size: 1.3rem; color: ${(props) => props.theme.text}; }
+  @media (min-width: 600px) { flex-direction: row; justify-content: space-between; align-items: center; }
 `;
 
-const HabitControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
+const SortContainer = styled.div` display: flex; align-items: center; gap: 8px; color: ${(props) => props.theme.textSec}; width: 100%; @media (min-width: 600px) { width: auto; } `;
+
+const SortSelect = styled.select`
+  padding: 8px 12px; border-radius: 10px; border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.theme.cardBg}; color: ${(props) => props.theme.text};
+  font-weight: 600; cursor: pointer; outline: none; flex: 1; @media (min-width: 600px) { flex: none; }
 `;
 
-const CheckCircle = styled.button`
-  width: 48px;
-  height: 48px;
+const HabitsGrid = styled.div` display: flex; flex-direction: column; gap: 12px; `; /* Менший відступ між картками на мобільному */
 
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  background: ${(props) => props.$done ? 'linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%)' : 'transparent'};
-  border: 3px solid ${(props) => props.$done ? 'transparent' : props.theme.border};
-  color: white;
-  cursor: pointer;
-  font-size: 1.4rem;
-  flex-shrink: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
-  animation: ${(props) => props.$done ? popAnimation : 'none'} 0.4s ease forwards;
-
-  &:hover {
-    border-color: #1dd1a1;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(29, 209, 161, 0.2);
-  }
-
-  svg {
-    opacity: ${(props) => props.$done ? 1 : 0};
-    transform: scale(${(props) => props.$done ? 1 : 0});
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
+const HabitItem = styled.div` 
+  display: flex; flex-direction: column; gap: 16px; background: ${(props) => props.theme.cardBg}; 
+  padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+  border: 1px solid ${(props) => props.theme.border}; transition: all 0.2s ease; 
+  &:hover { border-color: ${(props) => props.$editing ? props.theme.border : '#1dd1a1'}; } 
+  @media (min-width: 600px) { flex-direction: row; align-items: ${(props) => props.$editing ? 'flex-start' : 'center'}; justify-content: space-between; padding: 20px; } 
 `;
 
-const DeleteIcon = styled.button`
-  background: transparent;
-  color: ${(props) => props.theme.textSec};
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  
-  &:hover { color: #ff6b6b; }
+const HabitContent = styled.div` flex: 1; min-width: 0; 
+  h3 { margin: 0; font-size: 1.1rem; font-weight: 600; word-break: break-word; } 
+  .desc { margin: 4px 0 0 0; font-size: 0.9rem; color: ${(props) => props.theme.textSec}; line-height: 1.4; } 
+  .streak { margin: 10px 0 0 0; font-size: 0.85rem; font-weight: 700; color: #ff9f43; display: flex; align-items: center; gap: 5px; background: rgba(255, 159, 67, 0.1); padding: 4px 10px; border-radius: 8px; width: fit-content; } 
 `;
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 40px 20px;
-  color: ${(props) => props.theme.textSec};
-  background: ${(props) => props.theme.cardBg};
-  border-radius: 20px;
-  border: 1px dashed ${(props) => props.theme.border};
+const HabitControls = styled.div` display: flex; align-items: center; gap: 8px; flex-shrink: 0; align-self: flex-end; width: 100%; justify-content: flex-end; @media (min-width: 600px) { align-self: center; width: auto; } `;
+
+const ActionIconBtn = styled.button` background: ${(props) => props.$bg || 'transparent'}; color: ${(props) => props.$color || props.theme.textSec}; border: none; font-size: 1.1rem; cursor: pointer; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; &:hover { background: ${(props) => props.$hoverBg || 'transparent'}; color: ${(props) => props.$hoverColor || '#fff'}; transform: scale(1.05); } `;
+
+const popAnimation = keyframes` 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } `;
+
+const CheckCircle = styled.button` 
+  width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; 
+  background: ${(props) => props.$done ? 'linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%)' : 'transparent'}; 
+  border: 3px solid ${(props) => props.$done ? 'transparent' : props.theme.border}; color: white; cursor: pointer; font-size: 1.2rem; flex-shrink: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); animation: ${(props) => props.$done ? popAnimation : 'none'} 0.4s ease forwards; margin-left: auto;
+  &:hover { border-color: #1dd1a1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(29, 209, 161, 0.2); } 
+  svg { opacity: ${(props) => props.$done ? 1 : 0}; transform: scale(${(props) => props.$done ? 1 : 0}); transition: all 0.3s ease; } 
+  @media (min-width: 600px) { margin-left: 10px; width: 48px; height: 48px; font-size: 1.4rem; }
 `;
 
-const popAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-`;
+const EmptyState = styled.div` text-align: center; padding: 40px 20px; color: ${(props) => props.theme.textSec}; background: ${(props) => props.theme.cardBg}; border-radius: 20px; border: 1px dashed ${(props) => props.theme.border}; `;
+
+const ChartHeader = styled.div` display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; h3 { margin: 0; font-size: 1.1rem; color: ${(props) => props.theme.text}; } `;
+const IntervalSelect = styled.select` padding: 6px 10px; border-radius: 8px; border: 1px solid ${(props) => props.theme.border}; background: ${(props) => props.theme.bg}; color: ${(props) => props.theme.text}; font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none; `;
+
 
 const Home = ({ toggleTheme, currentTheme }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user] = useState(() => { const saved = localStorage.getItem("user"); return saved ? JSON.parse(saved) : null; });
   
   const [habits, setHabits] = useState([]);
-  const [newHabit, setNewHabit] = useState("");
-  const [aiAdvice, setAiAdvice] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  const [chartInterval, setChartInterval] = useState(7);
+  const [sortBy, setSortBy] = useState("date_desc");
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState("");
+
+  const API_URL = "https://habit-tracker-wtyx.onrender.com/api"; 
 
   const fetchHabits = async () => {
     try {
-      const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.get("https://habit-tracker-wtyx.onrender.com/api/habits", config);
+      const res = await axios.get(`${API_URL}/habits`, { headers: { "auth-token": user?.token } });
       setHabits(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
+  useEffect(() => { if (!user) navigate("/login"); else fetchHabits(); }, [user, navigate]);
+
+  const calculateStreak = (completedDates) => {
+    if (!completedDates || completedDates.length === 0) return 0;
+    const datesSet = new Set(completedDates);
+    let streak = 0;
+    let currentDate = new Date();
+    
+    let dateStr = currentDate.toISOString().split('T')[0];
+    if (datesSet.has(dateStr)) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
     } else {
-      fetchHabits();
+      currentDate.setDate(currentDate.getDate() - 1);
+      dateStr = currentDate.toISOString().split('T')[0];
+      if (datesSet.has(dateStr)) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else { return 0; }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, navigate]);
+    while (true) {
+      dateStr = currentDate.toISOString().split('T')[0];
+      if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); }
+      else { break; }
+    }
+    return streak;
+  };
+
+  const getSortedHabits = () => {
+    return [...habits].sort((a, b) => {
+      if (sortBy === "date_desc") return new Date(b.createdAt) - new Date(a.createdAt);
+      if (sortBy === "date_asc") return new Date(a.createdAt) - new Date(b.createdAt);
+      if (sortBy === "name_asc") return a.title.localeCompare(b.title);
+      if (sortBy === "streak_desc") return calculateStreak(b.completedDates) - calculateStreak(a.completedDates);
+      return 0;
+    });
+  };
+
+  const sortedHabits = getSortedHabits();
 
   const getAIAdvice = async () => {
     setIsAiLoading(true);
     try {
-      const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/ai/suggest", { habits }, config);
+      const res = await axios.post(`${API_URL}/ai/suggest`, { habits }, { headers: { "auth-token": user?.token } });
       setAiAdvice(res.data.advice);
-    } catch (err) {
-      setAiAdvice("Не вдалося підключитися до помічника 😔");
-    }
+    } catch (err) { setAiAdvice("Не вдалося підключитися до помічника 😔"); }
     setIsAiLoading(false);
   };
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!newHabit.trim()) return;
+    if (!newTitle.trim()) return;
     try {
-      const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/habits", { title: newHabit }, config);
+      const res = await axios.post(`${API_URL}/habits`, { title: newTitle, description: newDesc }, { headers: { "auth-token": user?.token } });
       setHabits([...habits, res.data]);
-      setNewHabit("");
-    } catch (err) {
-      alert("Помилка створення!");
-    }
+      setNewTitle(""); setNewDesc("");
+    } catch (err) { alert("Помилка створення!"); }
+  };
+
+  const startEdit = (habit) => { setEditingId(habit._id); setEditTitle(habit.title); setEditDesc(habit.description || ""); };
+
+  const handleSaveEdit = async (id) => {
+    try {
+      const res = await axios.put(`${API_URL}/habits/${id}/edit`, { title: editTitle, description: editDesc }, { headers: { "auth-token": user?.token } });
+      setHabits(habits.map(h => h._id === id ? { ...h, title: res.data.title, description: res.data.description } : h));
+      setEditingId(null);
+    } catch (err) { alert("Помилка оновлення!"); }
   };
 
   const handleToggle = async (id) => {
     try {
-      const config = { headers: { "auth-token": user?.token } };
-      await axios.put(`https://habit-tracker-wtyx.onrender.com/api/habits/${id}/toggle`, {}, config);
+      await axios.put(`${API_URL}/habits/${id}/toggle`, {}, { headers: { "auth-token": user?.token } });
       fetchHabits();
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handleDelete = async (id) => {
     if(!window.confirm("Видалити цю звичку?")) return;
     try {
-      const config = { headers: { "auth-token": user?.token } };
-      await axios.delete(`https://habit-tracker-wtyx.onrender.com/api/habits/${id}`, config);
+      await axios.delete(`${API_URL}/habits/${id}`, { headers: { "auth-token": user?.token } });
       setHabits(habits.filter(h => h._id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const logout = () => { localStorage.removeItem("user"); window.location.href = "/login"; };
+  const isDoneToday = (habit) => habit.completedDates.includes(new Date().toISOString().split('T')[0]);
 
-  const isDoneToday = (habit) => {
-    const today = new Date().toISOString().split('T')[0];
-    return habit.completedDates.includes(today);
+  const handleTextareaInput = (e) => {
+    e.target.style.height = 'auto';
+    e.target.style.height = (e.target.scrollHeight) + 'px';
   };
 
   if (!user) return null;
@@ -388,67 +263,98 @@ const Home = ({ toggleTheme, currentTheme }) => {
   return (
     <PageWrapper>
       <MainContainer>
-        
         <HeaderBar>
           <Greeting>Привіт, <span>{user?.username}</span> 👋</Greeting>
           <HeaderActions>
-            <IconButton onClick={toggleTheme} title="Змінити тему">
-              {currentTheme === 'light' ? <FaMoon /> : <FaSun />}
-            </IconButton>
+            <IconButton onClick={toggleTheme}>{currentTheme === 'light' ? <FaMoon /> : <FaSun />}</IconButton>
             <OutlineButton onClick={logout}>Вийти</OutlineButton>
           </HeaderActions>
         </HeaderBar>
 
         <AICard>
           <AITrigger onClick={getAIAdvice} disabled={isAiLoading}>
-            <FaMagic /> {isAiLoading ? "Аналізую твої звички..." : "ШІ Асистент"}
+            <FaMagic /> {isAiLoading ? "Аналізую..." : "ШІ Асистент"}
           </AITrigger>
           {aiAdvice && <AIResponse>✨ {aiAdvice}</AIResponse>}
         </AICard>
 
-        <AddHabitForm onSubmit={handleAdd}>
-          <CustomInput 
-            placeholder="Наприклад: Читати 20 сторінок..." 
-            value={newHabit}
-            onChange={(e) => setNewHabit(e.target.value)}
-          />
-          <PrimaryButton type="submit"><FaPlus /> Додати</PrimaryButton>
-        </AddHabitForm>
+        <FormCard onSubmit={handleAdd}>
+          <InputsWrapper>
+            <CleanInput 
+              placeholder="Яку звичку плануємо? (напр. Вода)" 
+              value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required 
+            />
+            <CleanTextarea 
+              placeholder="Деталі (напр. 2 літри до 18:00)..." 
+              value={newDesc} onChange={(e) => setNewDesc(e.target.value)} 
+              onInput={handleTextareaInput}
+            />
+          </InputsWrapper>
+          <FormActions>
+            <PrimaryButton type="submit"><FaPlus /> Створити</PrimaryButton>
+          </FormActions>
+        </FormCard>
+
+        {habits.length > 0 && (
+          <ListHeader>
+            <h2>Мої звички</h2>
+            <SortContainer>
+              <FaSortAmountDown />
+              <SortSelect value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="date_desc">Новіші</option>
+                <option value="date_asc">Старіші</option>
+                <option value="name_asc">А-Я</option>
+                <option value="streak_desc">🔥 Найбільша серія</option>
+              </SortSelect>
+            </SortContainer>
+          </ListHeader>
+        )}
 
         <HabitsGrid>
-          {habits.map((habit) => (
-            <HabitItem key={habit._id}>
-              <HabitContent>
-                <h3>{habit.title}</h3>
-                <p>🔥 Серія: {habit.completedDates.length} днів</p>
-              </HabitContent>
-              <HabitControls>
-                <CheckCircle 
-                  $done={isDoneToday(habit)} 
-                  onClick={() => handleToggle(habit._id)}
-                >
-                  <FaCheck />
-                </CheckCircle>
-                <DeleteIcon onClick={() => handleDelete(habit._id)}>
-                  <FaTrash />
-                </DeleteIcon>
-              </HabitControls>
+          {sortedHabits.map((habit) => (
+            <HabitItem key={habit._id} $editing={editingId === habit._id}>
+              {editingId === habit._id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <CleanInput style={{ padding: '0 0 10px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                  <CleanTextarea style={{ padding: '10px 0', minHeight: '60px' }} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} onInput={handleTextareaInput} />
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                    <ActionIconBtn onClick={() => setEditingId(null)} $hoverColor="#ff6b6b"><FaTimes /> Скасувати</ActionIconBtn>
+                    <PrimaryButton style={{ height: '38px', padding: '0 15px', fontSize: '0.9rem' }} onClick={() => handleSaveEdit(habit._id)}><FaSave /> Зберегти</PrimaryButton>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <HabitContent>
+                    <h3>{habit.title}</h3>
+                    {habit.description && <p className="desc">{habit.description}</p>}
+                    <p className="streak">🔥 Серія: {calculateStreak(habit.completedDates)} днів</p>
+                  </HabitContent>
+                  
+                  <HabitControls>
+                    <ActionIconBtn onClick={() => startEdit(habit)} $color="#4a69bd" $hoverBg="rgba(74, 105, 189, 0.1)" $hoverColor="#6a89cc"><FaEdit /></ActionIconBtn>
+                    <ActionIconBtn onClick={() => handleDelete(habit._id)} $color="#ff6b6b" $hoverBg="rgba(255, 107, 107, 0.1)" $hoverColor="#ff4757"><FaTrash /></ActionIconBtn>
+                    <CheckCircle $done={isDoneToday(habit)} onClick={() => handleToggle(habit._id)}><FaCheck /></CheckCircle>
+                  </HabitControls>
+                </>
+              )}
             </HabitItem>
           ))}
-          
-          {habits.length === 0 && (
-            <EmptyState>
-              <p>У тебе ще немає звичок. Час створити першу! 🚀</p>
-            </EmptyState>
-          )}
+          {habits.length === 0 && <EmptyState><p>У тебе ще немає звичок. Час створити першу! 🚀</p></EmptyState>}
         </HabitsGrid>
 
         {habits.length > 0 && (
           <div style={{ background: 'var(--card-bg, transparent)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-color, transparent)' }}>
-            <StatChart habits={habits} currentTheme={currentTheme} />
+            <ChartHeader>
+              <h3>Активність</h3>
+              <IntervalSelect value={chartInterval} onChange={(e) => setChartInterval(Number(e.target.value))}>
+                <option value={7}>7 днів</option>
+                <option value={14}>14 днів</option>
+                <option value={30}>30 днів</option>
+              </IntervalSelect>
+            </ChartHeader>
+            <StatChart habits={habits} currentTheme={currentTheme} interval={chartInterval} />
           </div>
         )}
-
       </MainContainer>
     </PageWrapper>
   );

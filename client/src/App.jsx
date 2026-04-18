@@ -15,16 +15,25 @@ function App() {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme); // Зберігаємо вибір у браузері
+    localStorage.setItem("theme", newTheme);
   };
 
   return (
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={user ? <Home toggleTheme={toggleTheme} currentTheme={theme} /> : <Navigate to="/login" />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/" 
+            element={user ? <Home toggleTheme={toggleTheme} currentTheme={theme} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/register" 
+            element={<Register toggleTheme={toggleTheme} currentTheme={theme} />} 
+          />
+          <Route 
+            path="/login" 
+            element={<Login toggleTheme={toggleTheme} currentTheme={theme} />} 
+          />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
