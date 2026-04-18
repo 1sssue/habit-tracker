@@ -156,7 +156,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiAdvice, setAiAdvice] = useState("");
 
-  const API_URL = "http://localhost:5000/api"; 
+  const API_URL = "https://habit-tracker-wtyx.onrender.com/api"; 
 
   const fetchHabits = async () => {
     try {
