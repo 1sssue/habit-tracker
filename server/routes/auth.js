@@ -66,7 +66,7 @@ router.post('/forgot-password', async (req, res) => {
         
         const token = jwt.sign({ email: user.email, id: user._id }, secret, { expiresIn: '15m' });
 
-        const link = `https://habit-tracker-wtyx.onrender.com/reset-password/${user._id}/${token}`;
+        const link = `https://habit-tracker-ten-sepia.vercel.app/reset-password/${user._id}/${token}`;
 
         await sendEmail(
             user.email,
