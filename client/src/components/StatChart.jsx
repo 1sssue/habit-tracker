@@ -11,9 +11,9 @@ const getGradient = (ctx, chartArea) => {
   return gradient;
 };
 
-const StatChart = ({ habits, currentTheme, interval = 7 }) => {
+const StatChart = ({ habits, currentTheme, interval = 7, selectedHabitId = 'all' }) => {
   const isDark = currentTheme === 'dark';
-  const textColor = isDark ? '#e0e0e0' : '#2d3436'; 
+  const textColor = isDark ? '#ffffff' : '#1e293b'; 
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   const getPastDays = (daysCount) => {
@@ -31,7 +31,9 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
   const completedCounts = targetDays.map(date => {
     let count = 0;
     habits.forEach(habit => {
-      if (habit.completedDates.includes(date)) count++;
+      if (selectedHabitId === 'all' || habit._id === selectedHabitId) {
+        if (habit.completedDates.includes(date)) count++;
+      }
     });
     return count;
   });
@@ -64,7 +66,7 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
     },
     scales: {
       x: { 
-        ticks: { color: textColor, font: { size: interval > 14 ? 10 : 12 } }, // Зменшуємо шрифт для 30 днів
+        ticks: { color: textColor, font: { size: interval > 14 ? 10 : 12 } },
         grid: { display: false } 
       },
       y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true },
@@ -83,7 +85,7 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
             ctx.fillStyle = textColor; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            ctx.font = 'bold 15px "Inter", sans-serif'; 
+            ctx.font = 'bold 14px "Inter", sans-serif'; 
             ctx.fillText(dataValue, bar.x, bar.y - 6);
           }
         });
@@ -93,7 +95,7 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
 
   return (
     <div style={{ height: '280px', width: '100%' }}>
-      <Bar key={currentTheme} data={data} options={options} plugins={[topLabelsPlugin]} />
+      <Bar key={`${currentTheme}-${selectedHabitId}`} data={data} options={options} plugins={[topLabelsPlugin]} />
     </div>
   );
 };

@@ -6,6 +6,9 @@ import { lightTheme, darkTheme } from "./theme";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const user = localStorage.getItem("user");
@@ -33,6 +36,18 @@ function App() {
           <Route 
             path="/login" 
             element={<Login toggleTheme={toggleTheme} currentTheme={theme} />} 
+          />
+          <Route
+            path="/profile"
+            element={user ? <Profile /> : <Navigate to="/login" />}
+          />
+          <Route 
+            path="/forgot-password" 
+            element={<ForgotPassword toggleTheme={toggleTheme} currentTheme={theme} />} 
+          />
+          <Route 
+            path="/reset-password/:id/:token" 
+            element={<ResetPassword toggleTheme={toggleTheme} currentTheme={theme} />} 
           />
         </Routes>
       </BrowserRouter>

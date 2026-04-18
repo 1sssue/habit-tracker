@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic, FaEdit, FaSave, FaTimes, FaSortAmountDown } from "react-icons/fa";
 import StatChart from "../components/StatChart";
 
@@ -164,6 +164,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const [editDesc, setEditDesc] = useState("");
 
   const [chartInterval, setChartInterval] = useState(7);
+  const [chartHabitId, setChartHabitId] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiAdvice, setAiAdvice] = useState("");
@@ -277,6 +278,9 @@ const Home = ({ toggleTheme, currentTheme }) => {
         <HeaderBar>
           <Greeting>Привіт, <span>{user?.username}</span> 👋</Greeting>
           <HeaderActions>
+            <Link to="/profile" style={{ textDecoration: 'none' }}>
+               <IconButton title="Профіль">👤</IconButton>
+            </Link>
             <IconButton onClick={toggleTheme}>{currentTheme === 'light' ? <FaMoon /> : <FaSun />}</IconButton>
             <OutlineButton onClick={logout}>Вийти</OutlineButton>
           </HeaderActions>
@@ -357,13 +361,22 @@ const Home = ({ toggleTheme, currentTheme }) => {
           <div style={{ background: 'var(--card-bg, transparent)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-color, transparent)' }}>
             <ChartHeader>
               <h3>Активність</h3>
-              <IntervalSelect value={chartInterval} onChange={(e) => setChartInterval(Number(e.target.value))}>
-                <option value={7}>7 днів</option>
-                <option value={14}>14 днів</option>
-                <option value={30}>30 днів</option>
-              </IntervalSelect>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <IntervalSelect value={chartHabitId} onChange={(e) => setChartHabitId(e.target.value)}>
+                  <option value="all">Усі звички</option>
+                  {habits.map(h => (
+                    <option key={h._id} value={h._id}>{h.title}</option>
+                  ))}
+                </IntervalSelect>
+
+                <IntervalSelect value={chartInterval} onChange={(e) => setChartInterval(Number(e.target.value))}>
+                  <option value={7}>7 днів</option>
+                  <option value={14}>14 днів</option>
+                  <option value={30}>30 днів</option>
+                </IntervalSelect>
+              </div>
             </ChartHeader>
-            <StatChart habits={habits} currentTheme={currentTheme} interval={chartInterval} />
+            <StatChart habits={habits} currentTheme={currentTheme} interval={chartInterval} selectedHabitId={chartHabitId} />
           </div>
         )}
       </MainContainer>

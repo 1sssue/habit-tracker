@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -15,6 +17,8 @@ app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/habits', habitRoute);
 app.use('/api/ai', aiRoute);
+app.use('/api/notes', require('./routes/notes'));
+app.use('/api/users', require('./routes/users'));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ База даних MongoDB підключена!'))
