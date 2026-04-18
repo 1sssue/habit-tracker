@@ -89,17 +89,29 @@ const PrimaryButton = styled.button`
 `;
 
 const ListHeader = styled.div`
-  display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  display: flex; 
+  justify-content: space-between;
+  align-items: center; 
+  margin-bottom: 5px;
   h2 { margin: 0; font-size: 1.3rem; color: ${(props) => props.theme.text}; }
-  @media (min-width: 600px) { flex-direction: row; justify-content: space-between; align-items: center; }
 `;
 
-const SortContainer = styled.div` display: flex; align-items: center; gap: 8px; color: ${(props) => props.theme.textSec}; width: 100%; @media (min-width: 600px) { width: auto; } `;
+const SortContainer = styled.div` 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  color: ${(props) => props.theme.textSec}; 
+`;
 
 const SortSelect = styled.select`
-  padding: 8px 12px; border-radius: 10px; border: 1px solid ${(props) => props.theme.border};
-  background: ${(props) => props.theme.cardBg}; color: ${(props) => props.theme.text};
-  font-weight: 600; cursor: pointer; outline: none; flex: 1; @media (min-width: 600px) { flex: none; }
+  padding: 8px 12px; 
+  border-radius: 10px; 
+  border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.theme.cardBg}; 
+  color: ${(props) => props.theme.text};
+  font-weight: 600; 
+  cursor: pointer; 
+  outline: none; 
 `;
 
 const HabitsGrid = styled.div` display: flex; flex-direction: column; gap: 12px; `; /* Менший відступ між картками на мобільному */

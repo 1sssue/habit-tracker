@@ -1,15 +1,15 @@
 export const lightTheme = {
-  bg: "#f0f2f5",       // Фон сторінки
-  cardBg: "white",     // Фон карток і форм
-  text: "#2c3e50",     // Основний текст
-  textSec: "#888",     // Другорядний текст
-  border: "#ddd"       // Рамки
+  bg: "#f1f5f9",         // Фон для всієї сторінки
+  cardBg: "#ffffff",     // Фон для карток звичок
+  text: "#0f172a",       // Для заголовків
+  textSec: "#475569",    // Для описів
+  border: "#cbd5e1",     // Рамка
 };
 
 export const darkTheme = {
-  bg: "#1a1a2e",       // Темно-синій фон
-  cardBg: "#16213e",   // Трохи світліші картки
-  text: "#e6e6ea",     // Світлий текст
-  textSec: "#b0b0b0",  // Сіруватий текст
-  border: "#2a2a4a"    // Темні рамки
+  bg: "#0f172a",
+  cardBg: "#1e293b",
+  text: "#f8fafc",
+  textSec: "#94a3b8",
+  border: "#334155",
 };

@@ -80,10 +80,10 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
         meta.data.forEach((bar, index) => {
           const dataValue = dataset.data[index];
           if (dataValue > 0 && interval <= 14) {
-            ctx.fillStyle = textColor;
+            ctx.fillStyle = textColor; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            ctx.font = 'bold 13px sans-serif';
+            ctx.font = 'bold 15px "Inter", sans-serif'; 
             ctx.fillText(dataValue, bar.x, bar.y - 6);
           }
         });
@@ -93,7 +93,7 @@ const StatChart = ({ habits, currentTheme, interval = 7 }) => {
 
   return (
     <div style={{ height: '280px', width: '100%' }}>
-      <Bar data={data} options={options} plugins={[topLabelsPlugin]} />
+      <Bar key={currentTheme} data={data} options={options} plugins={[topLabelsPlugin]} />
     </div>
   );
 };
