@@ -311,7 +311,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const fetchHabits = async () => {
     try {
       const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.get("http://localhost:5000/api/habits", config);
+      const res = await axios.get("https://habit-tracker-wtyx.onrender.com/api/habits", config);
       setHabits(res.data);
     } catch (err) {
       console.error(err);
@@ -331,7 +331,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
     setIsAiLoading(true);
     try {
       const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.post("http://localhost:5000/api/ai/suggest", { habits }, config);
+      const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/ai/suggest", { habits }, config);
       setAiAdvice(res.data.advice);
     } catch (err) {
       setAiAdvice("Не вдалося підключитися до помічника 😔");
@@ -344,7 +344,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
     if (!newHabit.trim()) return;
     try {
       const config = { headers: { "auth-token": user?.token } };
-      const res = await axios.post("http://localhost:5000/api/habits", { title: newHabit }, config);
+      const res = await axios.post("https://habit-tracker-wtyx.onrender.com/api/habits", { title: newHabit }, config);
       setHabits([...habits, res.data]);
       setNewHabit("");
     } catch (err) {
@@ -355,7 +355,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const handleToggle = async (id) => {
     try {
       const config = { headers: { "auth-token": user?.token } };
-      await axios.put(`http://localhost:5000/api/habits/${id}/toggle`, {}, config);
+      await axios.put(`https://habit-tracker-wtyx.onrender.com/api/habits/${id}/toggle`, {}, config);
       fetchHabits();
     } catch (err) {
       console.error(err);
@@ -366,7 +366,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
     if(!window.confirm("Видалити цю звичку?")) return;
     try {
       const config = { headers: { "auth-token": user?.token } };
-      await axios.delete(`http://localhost:5000/api/habits/${id}`, config);
+      await axios.delete(`https://habit-tracker-wtyx.onrender.com/api/habits/${id}`, config);
       setHabits(habits.filter(h => h._id !== id));
     } catch (err) {
       console.error(err);

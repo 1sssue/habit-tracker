@@ -109,7 +109,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/api/auth/register", {
+      await axios.post("https://habit-tracker-wtyx.onrender.com/api/auth/register", {
         username,
         email,
         password,
