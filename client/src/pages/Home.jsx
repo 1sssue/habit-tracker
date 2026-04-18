@@ -48,7 +48,6 @@ const AITrigger = styled.button`
 
 const AIResponse = styled.div` font-size: 0.95rem; line-height: 1.5; color: ${(props) => props.theme.text}; padding: 16px; background: ${(props) => props.theme.cardBg}; border-radius: 12px; border-left: 4px solid #6a11cb; box-shadow: 0 2px 8px rgba(0,0,0,0.04); `;
 
-
 const FormCard = styled.form` 
   display: flex; flex-direction: column; 
   background: ${(props) => props.theme.cardBg}; 
@@ -157,7 +156,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiAdvice, setAiAdvice] = useState("");
 
-  const API_URL = "https://habit-tracker-wtyx.onrender.com/api"; 
+  const API_URL = "http://localhost:5000/api"; 
 
   const fetchHabits = async () => {
     try {
