@@ -55,26 +55,19 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// --- ВІДНОВЛЕННЯ ПАРОЛЯ: Етап 1 (Відправка листа з посиланням) ---
 router.post('/forgot-password', async (req, res) => {
     try {
-        // 1. Шукаємо користувача
         const user = await User.findOne({ email: req.body.email });
         if (!user) {
             return res.status(404).json({ message: "Користувача з таким email не знайдено." });
         }
 
-        // 2. Створюємо унікальний секрет (щоб токен став недійсним після зміни пароля)
         const secret = process.env.JWT_SECRET + user.password;
         
-        // 3. Генеруємо токен, який діє 15 хвилин
         const token = jwt.sign({ email: user.email, id: user._id }, secret, { expiresIn: '15m' });
 
-        // 4. Створюємо посилання для відновлення (поки робимо для localhost, потім зміниш на Render)
-        // FRONTEND_URL - це посилання на твій React (зазвичай http://localhost:5173)
-        const link = `http://localhost:5173/reset-password/${user._id}/${token}`;
+        const link = `https://habit-tracker-wtyx.onrender.com/reset-password/${user._id}/${token}`;
 
-        // 5. Відправляємо лист
         await sendEmail(
             user.email,
             "Відновлення пароля - Habit Tracker",
@@ -90,7 +83,7 @@ router.post('/forgot-password', async (req, res) => {
 
 router.post('/reset-password/:id/:token', async (req, res) => {
     const { id, token } = req.params;
-    const { password } = req.body; // Новий пароль
+    const { password } = req.body;
 
     const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/;
     if (!passwordRegex.test(password)) {

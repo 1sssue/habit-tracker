@@ -66,7 +66,7 @@ const Profile = () => {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
 
-  const API_URL = "https://habit-tracker-wtyx.onrender.com/api";
+  const API_URL = "http://localhost:5000/api";
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
