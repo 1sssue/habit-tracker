@@ -258,6 +258,27 @@ export const PrimaryButton = styled.button`
   }
 `;
 
+export const OutlineButton = styled.button`
+  background: transparent;
+  color: #6a11cb;
+  border: 1px solid rgba(106, 17, 203, 0.5);
+  padding: 0 16px;
+  height: 44px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    background: rgba(106, 17, 203, 0.1);
+    border-color: #6a11cb;
+  }
+`;
+
 export const ListHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -540,4 +561,51 @@ export const NativeTimeChip = styled.input`
     cursor: pointer;
     filter: ${(props) => props.$active ? 'brightness(0) invert(1)' : (props.theme.bg === '#0f172a' ? 'invert(1)' : 'none')};
   }
+`;
+
+export const ModalOverlay = styled.div`
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000; padding: 20px;
+`;
+
+export const ModalContent = styled.div`
+  background: ${(props) => props.theme.cardBg};
+  border-radius: 24px; padding: 30px; width: 100%; max-width: 500px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  border: 1px solid ${(props) => props.theme.border};
+  display: flex; flex-direction: column; gap: 20px;
+  max-height: 90vh; overflow-y: auto;
+`;
+
+export const ModalHeader = styled.div`
+  display: flex; justify-content: space-between; align-items: center;
+  h3 { margin: 0; font-size: 1.5rem; color: ${(props) => props.theme.text}; display: flex; align-items: center; gap: 10px; }
+`;
+
+export const GoalInputGroup = styled.div`
+  display: flex; gap: 10px;
+  input { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid ${(props) => props.theme.border}; background: ${(props) => props.theme.bg}; color: ${(props) => props.theme.text}; outline: none; font-size: 1rem; }
+  input:focus { border-color: #6a11cb; }
+  button { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+  button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(106, 17, 203, 0.3); }
+  button:disabled { opacity: 0.7; cursor: wait; }
+`;
+
+export const GeneratedList = styled.div`
+  display: flex; flex-direction: column; gap: 12px;
+`;
+
+export const GeneratedItem = styled.label`
+  display: flex; align-items: flex-start; gap: 15px; padding: 15px;
+  background: ${(props) => props.$selected ? 'rgba(29, 209, 161, 0.1)' : props.theme.bg};
+  border: 2px solid ${(props) => props.$selected ? '#1dd1a1' : props.theme.border};
+  border-radius: 16px; cursor: pointer; transition: 0.2s;
+  
+  input[type="checkbox"] { transform: scale(1.3); margin-top: 5px; cursor: pointer; accent-color: #1dd1a1; }
+  .info { flex: 1; }
+  .info h4 { margin: 0 0 5px 0; color: ${(props) => props.theme.text}; font-size: 1.05rem; }
+  .info p { margin: 0; color: ${(props) => props.theme.textSec}; font-size: 0.85rem; line-height: 1.4; }
+  .time { margin-top: 8px; display: inline-block; font-size: 0.8rem; background: ${(props) => props.theme.cardBg}; padding: 4px 10px; border-radius: 8px; font-weight: 600; color: #1dd1a1; border: 1px solid rgba(29, 209, 161, 0.3); }
 `;

@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-// ДОДАНО FaSignOutAlt (Вихід) та FaUser (Заглушка профілю)
-import { FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic, FaEdit, FaSave, FaTimes, FaSortAmountDown, FaClock, FaStickyNote, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { 
+  FaCheck, FaTrash, FaPlus, FaMoon, FaSun, FaMagic, 
+  FaEdit, FaSave, FaTimes, FaSortAmountDown, FaClock, 
+  FaStickyNote, FaSignOutAlt, FaUser, FaBullseye 
+} from "react-icons/fa";
 import StatChart from "../components/StatChart";
 import NotesSidebar from "../components/NotesSidebar";
 
 import {
   PageWrapper, MainContainer, HeaderBar, Greeting, HeaderActions, IconButton, ProfileAvatarBtn, LogoutBtn,
-  AICard, AITrigger, AIResponse, FormCard, InputsWrapper, CleanInput, CleanTextarea, PrimaryButton,
+  AICard, AITrigger, AIResponse, FormCard, InputsWrapper, CleanInput, CleanTextarea, PrimaryButton, OutlineButton,
   ListHeader, SortContainer, SortSelect, HabitsGrid, HabitItem, HabitContent, HabitControls,
   ActionIconBtn, CheckCircle, EmptyState, ChartHeader, IntervalSelect,
-  ReminderWrapper, ReminderLeft, ReminderHeader, TimeChipContainer, TimeChip, NativeTimeChip
+  ReminderWrapper, ReminderLeft, ReminderHeader, TimeChipContainer, TimeChip, NativeTimeChip,
+  ModalOverlay, ModalContent, ModalHeader, GoalInputGroup, GeneratedList, GeneratedItem
 } from "./Home.styles";
 
 const Home = ({ toggleTheme, currentTheme }) => {
@@ -19,7 +23,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const [user] = useState(() => { const saved = localStorage.getItem("user"); return saved ? JSON.parse(saved) : null; });
   
   const [habits, setHabits] = useState([]);
-  const [userProfile, setUserProfile] = useState(null); // НОВИЙ СТЕЙТ ДЛЯ ПРОФІЛЮ ТА АВАТАРКИ
+  const [userProfile, setUserProfile] = useState(null);
 
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -35,9 +39,13 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const [editReminderTime, setEditReminderTime] = useState("");
   const [isNotesOpen, setIsNotesOpen] = useState(false);
 
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
+  const [isGeneratingGoal, setIsGeneratingGoal] = useState(false);
+  const [generatedHabits, setGeneratedHabits] = useState([]);
+
   const API_URL = "https://habit-tracker-wtyx.onrender.com/api"; 
 
-  // ЗАВАНТАЖЕННЯ ДАНИХ (Звички + Аватарка/Рівень)
   const fetchData = async () => {
     try {
       const [habitsRes, userRes] = await Promise.all([
@@ -54,7 +62,6 @@ const Home = ({ toggleTheme, currentTheme }) => {
     else fetchData(); 
   }, [user, navigate]);
 
-  // Підрахунок рівня тепер базується на даних з бекенду (якщо вони є), інакше рахуємо вручну
   const totalCompletions = habits.reduce((acc, habit) => acc + (habit.completedDates?.length || 0), 0);
   const userLevel = userProfile?.stats?.level || (Math.floor(totalCompletions / 10) + 1);
 
@@ -62,14 +69,18 @@ const Home = ({ toggleTheme, currentTheme }) => {
     if (!completedDates || completedDates.length === 0) return 0;
     const datesSet = new Set(completedDates);
     let streak = 0; let currentDate = new Date(); let dateStr = currentDate.toISOString().split('T')[0];
+    
     if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); } 
     else {
       currentDate.setDate(currentDate.getDate() - 1); dateStr = currentDate.toISOString().split('T')[0];
-      if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); } else { return 0; }
+      if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); } 
+      else { return 0; }
     }
+    
     while (true) {
       dateStr = currentDate.toISOString().split('T')[0];
-      if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); } else { break; }
+      if (datesSet.has(dateStr)) { streak++; currentDate.setDate(currentDate.getDate() - 1); } 
+      else { break; }
     }
     return streak;
   };
@@ -124,7 +135,7 @@ const Home = ({ toggleTheme, currentTheme }) => {
   const handleToggle = async (id) => {
     try {
       await axios.put(`${API_URL}/habits/${id}/toggle`, {}, { headers: { "auth-token": user?.token } });
-      fetchData(); // Оновлюємо і звички, і статистику
+      fetchData(); 
     } catch (err) { console.error(err); }
   };
 
@@ -136,10 +147,47 @@ const Home = ({ toggleTheme, currentTheme }) => {
     } catch (err) { console.error(err); }
   };
 
+  const handleGenerateGoal = async () => {
+    if (!goalInput.trim()) return;
+    setIsGeneratingGoal(true);
+    try {
+      const res = await axios.post(`${API_URL}/ai/breakdown`, { goal: goalInput }, { headers: { "auth-token": user?.token } });
+      const parsedHabits = res.data.map(h => ({ ...h, selected: true }));
+      setGeneratedHabits(parsedHabits);
+    } catch (err) {
+      alert("ШІ не зміг розібрати цю ціль. Спробуй перефразувати.");
+    } finally {
+      setIsGeneratingGoal(false);
+    }
+  };
+
+  const handleToggleGeneratedHabit = (index) => {
+    const updated = [...generatedHabits];
+    updated[index].selected = !updated[index].selected;
+    setGeneratedHabits(updated);
+  };
+
+  const handleSaveGeneratedHabits = async () => {
+    const selectedHabits = generatedHabits.filter(h => h.selected);
+    if (selectedHabits.length === 0) return;
+
+    for (const habit of selectedHabits) {
+      await axios.post(`${API_URL}/habits`, {
+        title: habit.title,
+        description: habit.description,
+        reminderTime: habit.reminderTime
+      }, { headers: { "auth-token": user?.token } });
+    }
+    
+    setIsGoalModalOpen(false);
+    setGoalInput("");
+    setGeneratedHabits([]);
+    fetchData();
+  };
+
   const logout = () => { localStorage.removeItem("user"); window.location.href = "/login"; };
   const isDoneToday = (habit) => habit.completedDates.includes(new Date().toISOString().split('T')[0]);
   const handleTextareaInput = (e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; };
-
   const isCustomTime = (time) => time !== "" && time !== "08:00" && time !== "14:00" && time !== "20:00";
 
   if (!user) return null;
@@ -147,7 +195,6 @@ const Home = ({ toggleTheme, currentTheme }) => {
   return (
     <PageWrapper>
       <MainContainer>
-        {/* === ОНОВЛЕНА НАВІГАЦІЙНА ПАНЕЛЬ === */}
         <HeaderBar>
           <Greeting>
             Привіт, <span>{user?.username}</span> 
@@ -180,10 +227,20 @@ const Home = ({ toggleTheme, currentTheme }) => {
             </LogoutBtn>
           </HeaderActions>
         </HeaderBar>
-        {/* =================================== */}
 
         <AICard>
-          <AITrigger onClick={getAIAdvice} disabled={isAiLoading}><FaMagic /> {isAiLoading ? "Аналізую..." : "ШІ Асистент"}</AITrigger>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <AITrigger style={{ flex: 1, minWidth: '150px' }} onClick={getAIAdvice} disabled={isAiLoading}>
+              <FaMagic /> {isAiLoading ? "Аналізую..." : "Порада від ШІ"}
+            </AITrigger>
+            <AITrigger 
+              type="button" 
+              style={{ flex: 1, minWidth: '150px', background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', boxShadow: '0 8px 16px rgba(253, 160, 133, 0.25)' }} 
+              onClick={() => setIsGoalModalOpen(true)}
+            >
+              <FaBullseye /> Розбити ціль
+            </AITrigger>
+          </div>
           {aiAdvice && <AIResponse>✨ {aiAdvice}</AIResponse>}
         </AICard>
 
@@ -313,11 +370,71 @@ const Home = ({ toggleTheme, currentTheme }) => {
           </div>
         )}
       </MainContainer>
+      
       <NotesSidebar 
         isOpen={isNotesOpen} 
         onClose={() => setIsNotesOpen(false)} 
         userToken={user?.token} 
       />
+
+      {isGoalModalOpen && (
+        <ModalOverlay onClick={(e) => { if(e.target === e.currentTarget) setIsGoalModalOpen(false); }}>
+          <ModalContent>
+            <ModalHeader>
+              <h3><FaBullseye style={{color: '#6a11cb'}}/> Досягти цілі</h3>
+              <FaTimes onClick={() => setIsGoalModalOpen(false)} style={{cursor: 'pointer', color: 'gray'}}/>
+            </ModalHeader>
+            
+            <p style={{margin: '0', fontSize: '0.9rem', color: 'gray'}}>
+              Опиши глобальну мету, а ШІ розіб'є її на щоденні звички з ідеальним часом.
+            </p>
+            
+            <GoalInputGroup>
+              <input 
+                type="text" 
+                placeholder="Наприклад: Вивчити програмування..." 
+                value={goalInput} 
+                onChange={(e) => setGoalInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerateGoal()}
+              />
+              <button onClick={handleGenerateGoal} disabled={isGeneratingGoal || !goalInput.trim()}>
+                {isGeneratingGoal ? "Магія..." : "Генерувати"}
+              </button>
+            </GoalInputGroup>
+
+            {generatedHabits.length > 0 && (
+              <>
+                <GeneratedList>
+                  {generatedHabits.map((habit, index) => (
+                    <GeneratedItem key={index} $selected={habit.selected}>
+                      <input type="checkbox" checked={habit.selected} onChange={() => handleToggleGeneratedHabit(index)} />
+                      <div className="info">
+                        <h4>{habit.title}</h4>
+                        <p>{habit.description}</p>
+                        <span className="time"><FaClock style={{marginRight: '4px'}}/> {habit.reminderTime}</span>
+                      </div>
+                    </GeneratedItem>
+                  ))}
+                </GeneratedList>
+                
+                <PrimaryButton 
+                  style={{ 
+                    marginTop: '15px', 
+                    minHeight: '50px', 
+                    height: 'auto', 
+                    padding: '12px 20px',
+                    fontSize: '1rem'
+                  }} 
+                  onClick={handleSaveGeneratedHabits}
+                >
+                  <FaPlus /> Додати обрані звички у трекер
+                </PrimaryButton>
+              </>
+            )}
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
     </PageWrapper>
   );
 };

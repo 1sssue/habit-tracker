@@ -87,4 +87,36 @@ ${habitsContext}
     }
 });
 
+router.post('/breakdown', verify, async (req, res) => {
+    try {
+        const { goal } = req.body;
+
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(400).json({ error: "Немає API ключа" });
+        }
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const prompt = `Ти експерт з продуктивності. Клієнт хоче досягти такої цілі: "${goal}".
+        Розбий цю ціль на 3-5 конкретних, щоденних мікро-звичок. 
+        Поверни ТІЛЬКИ валідний JSON-масив об'єктів без жодного іншого тексту, пояснень чи markdown-розмітки (без \`\`\`json).
+        Формат масиву має бути строго таким: 
+        [
+          {"title": "Назва звички", "description": "Коротка деталь (1 речення)", "reminderTime": "08:00"}
+        ]`;
+
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const habits = JSON.parse(text); // Перетворюємо текст на реальний масив
+        res.json(habits);
+    } catch (error) {
+        console.error("Помилка генерації мікро-звичок:", error);
+        res.status(500).json({ error: "Не вдалося згенерувати звички. Спробуйте інший запит." });
+    }
+});
+
 module.exports = router;
