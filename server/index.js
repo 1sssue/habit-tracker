@@ -22,6 +22,7 @@ app.use('/api/habits', habitRoute);
 app.use('/api/ai', aiRoute);
 app.use('/api/notes', require('./routes/notes'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ База даних MongoDB підключена!'))

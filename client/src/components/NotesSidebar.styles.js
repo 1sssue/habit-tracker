@@ -108,8 +108,22 @@ export const NoteCard = styled.div`
   position: relative;
   transition: 0.2s;
 
-  h4 { margin: 0 0 8px 0; font-size: 1.1rem; color: #6a11cb; }
-  p { margin: 0; font-size: 0.9rem; color: ${(props) => props.theme.textSec}; line-height: 1.4; }
+  h4 { 
+    margin: 0 0 8px 0; 
+    font-size: 1.1rem; 
+    color: #6a11cb; 
+  }
+  
+  p { 
+    margin: 0; 
+    font-size: 0.9rem; 
+    color: ${(props) => props.theme.textSec}; 
+    line-height: 1.4; 
+    
+    /* === ОСЬ ЦІ ДВА РЯДКИ ВИРІШУЮТЬ ПРОБЛЕМУ === */
+    white-space: pre-wrap; 
+    word-break: break-word; 
+  }
   
   &:hover { border-color: #6a11cb; }
 `;

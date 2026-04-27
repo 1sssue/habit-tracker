@@ -1,6 +1,6 @@
 {
-  "name": "Habit Tracker AI",
-  "short_name": "Tracker",
+  "name": "Habit Tracker",
+  "short_name": "Habit Tracker",
   "description": "Трекер звичок з RPG-системою та ШІ",
   "start_url": "/",
   "display": "standalone",

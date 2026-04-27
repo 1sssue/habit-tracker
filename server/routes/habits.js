@@ -16,6 +16,9 @@ router.post('/', verify, async (req, res) => {
         title: req.body.title,
         description: req.body.description,
         reminderTime: req.body.reminderTime || "",
+        reminderType: req.body.reminderType || "none",
+        frequency: req.body.frequency || "daily",
+        specificDays: req.body.specificDays || [],
         userId: req.user._id
     });
 
@@ -38,6 +41,10 @@ router.put('/:id/edit', verify, async (req, res) => {
         habit.title = req.body.title;
         habit.description = req.body.description;
         habit.reminderTime = req.body.reminderTime || "";
+        
+        if (req.body.reminderType) habit.reminderType = req.body.reminderType;
+        if (req.body.frequency) habit.frequency = req.body.frequency;
+        if (req.body.specificDays) habit.specificDays = req.body.specificDays;
 
         const updatedHabit = await habit.save();
         res.json(updatedHabit);

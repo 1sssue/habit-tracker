@@ -23,7 +23,6 @@ export const MainContainer = styled.div`
   gap: 20px;
 `;
 
-/* === НОВА ПАНЕЛЬ НАВІГАЦІЇ (НАВБАР) === */
 export const HeaderBar = styled.header`
   display: flex;
   justify-content: space-between;
@@ -84,7 +83,6 @@ export const IconButton = styled.button`
   }
 `;
 
-/* НОВА КНОПКА ПРОФІЛЮ З ФОТО */
 export const ProfileAvatarBtn = styled.div`
   width: 44px;
   height: 44px;
@@ -107,7 +105,6 @@ export const ProfileAvatarBtn = styled.div`
   img { width: 100%; height: 100%; object-fit: cover; }
 `;
 
-/* НОВА КОМПАКТНА КНОПКА ВИХОДУ */
 export const LogoutBtn = styled.button`
   background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
@@ -197,6 +194,31 @@ export const InputsWrapper = styled.div`
   flex-direction: column;
   gap: 8px;
   padding: 16px 20px;
+`;
+
+export const StyledSelect = styled.select`
+  flex: 1;
+  min-width: 130px;
+  padding: 10px;
+  border-radius: 10px;
+  background: ${(props) => props.theme.bg}; 
+  color: ${(props) => props.theme.text}; 
+  border: 1px solid rgba(106, 17, 203, 0.3);
+  outline: none;
+  font-family: inherit; 
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.2s;
+
+  &:focus {
+    border-color: #6a11cb;
+  }
+
+  option {
+    background: ${(props) => props.theme.cardBg}; 
+    color: ${(props) => props.theme.text};
+    font-family: inherit;
+  }
 `;
 
 export const CleanInput = styled.input`
@@ -571,30 +593,82 @@ export const ModalOverlay = styled.div`
 `;
 
 export const ModalContent = styled.div`
-  background: ${(props) => props.theme.cardBg};
-  border-radius: 24px; padding: 30px; width: 100%; max-width: 500px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  background: ${(props) => props.theme.bg};
+  padding: 24px;
+  border-radius: 20px;
+  
+  width: 90%; 
+  max-width: 500px; /* На мобільному залишається компактним */
+  
+  @media (min-width: 768px) {
+    max-width: 750px; /* НОВЕ: На ПК вікно стає ширшим */
+  }
+  
+  max-height: 85vh;
+  overflow-y: auto;
+  
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border: 1px solid ${(props) => props.theme.border};
-  display: flex; flex-direction: column; gap: 20px;
-  max-height: 90vh; overflow-y: auto;
+  position: relative;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: #6a11cb; border-radius: 10px; }
 `;
 
 export const ModalHeader = styled.div`
   display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 15px; /* НОВЕ: Відступ від тексту опису */
   h3 { margin: 0; font-size: 1.5rem; color: ${(props) => props.theme.text}; display: flex; align-items: center; gap: 10px; }
 `;
 
 export const GoalInputGroup = styled.div`
-  display: flex; gap: 10px;
-  input { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid ${(props) => props.theme.border}; background: ${(props) => props.theme.bg}; color: ${(props) => props.theme.text}; outline: none; font-size: 1rem; }
-  input:focus { border-color: #6a11cb; }
-  button { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; border: none; padding: 0 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-  button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(106, 17, 203, 0.3); }
-  button:disabled { opacity: 0.7; cursor: wait; }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(106, 17, 203, 0.3);
+    background: transparent;
+    color: ${(props) => props.theme.text};
+    font-size: 1rem;
+    outline: none;
+    transition: 0.2s;
+
+    &:focus {
+      border-color: #6a11cb;
+    }
+  }
+
+  button {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 12px;
+    background: #6a11cb;
+    color: white;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover { background: #5a0eb0; }
+    &:disabled { background: gray; cursor: not-allowed; }
+  }
 `;
 
 export const GeneratedList = styled.div`
-  display: flex; flex-direction: column; gap: 12px;
+  display: grid; 
+  grid-template-columns: 1fr; /* Мобільні: 1 колонка */
+  gap: 12px;
+  margin-top: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr); /* НОВЕ: ПК та планшети - 2 колонки */
+  }
 `;
 
 export const GeneratedItem = styled.label`
@@ -602,6 +676,7 @@ export const GeneratedItem = styled.label`
   background: ${(props) => props.$selected ? 'rgba(29, 209, 161, 0.1)' : props.theme.bg};
   border: 2px solid ${(props) => props.$selected ? '#1dd1a1' : props.theme.border};
   border-radius: 16px; cursor: pointer; transition: 0.2s;
+  height: 100%; /* НОВЕ: щоб картки були однакової висоти в сітці */
   
   input[type="checkbox"] { transform: scale(1.3); margin-top: 5px; cursor: pointer; accent-color: #1dd1a1; }
   .info { flex: 1; }

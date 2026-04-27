@@ -22,6 +22,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    pushSubscription: { 
+        type: Object, 
+        default: null 
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);
