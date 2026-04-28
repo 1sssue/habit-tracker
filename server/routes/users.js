@@ -68,7 +68,7 @@ router.post('/request-security-change', verifyToken, async (req, res) => {
         const link = `https://habit-tracker-ten-sepia.vercel.app/profile?actionToken=${actionToken}`;
         
         await sendEmail(
-            user.email, // Відправляємо на ПОТОЧНУ пошту для безпеки
+            user.email,
             "Підтвердження змін у профілі - Habit Tracker",
             `Привіт!\n\nХтось (сподіваємось, це ти) запросив зміну налаштувань безпеки профілю.\n\nДля підтвердження перейди за посиланням (діє 10 хвилин):\n${link}\n\nЯкщо це був не ти, негайно зміни пароль!`
         );

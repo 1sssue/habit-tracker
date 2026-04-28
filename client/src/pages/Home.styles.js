@@ -62,9 +62,9 @@ export const HeaderActions = styled.div`
 `;
 
 export const IconButton = styled.button`
-  background: ${(props) => props.theme.bg};
-  color: ${(props) => props.theme.text};
-  border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.$active ? 'rgba(29, 209, 161, 0.1)' : props.theme.bg};
+  color: ${(props) => props.$active ? '#1dd1a1' : props.theme.text};
+  border: 1px solid ${(props) => props.$active ? '#1dd1a1' : props.theme.border};
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -199,7 +199,8 @@ export const InputsWrapper = styled.div`
 export const StyledSelect = styled.select`
   flex: 1;
   min-width: 130px;
-  padding: 10px;
+  padding: 0 12px;
+  height: 42px;
   border-radius: 10px;
   background: ${(props) => props.theme.bg}; 
   color: ${(props) => props.theme.text}; 
@@ -330,6 +331,12 @@ export const SortSelect = styled.select`
   font-weight: 600;
   cursor: pointer;
   outline: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+
+  option {
+    font-family: inherit;
+  }
 `;
 
 export const HabitsGrid = styled.div`
@@ -500,20 +507,26 @@ export const IntervalSelect = styled.select`
   font-weight: 600;
   cursor: pointer;
   outline: none;
+  font-family: inherit;
+
+  option {
+    font-family: inherit;
+  }
 `;
 
 export const ReminderWrapper = styled.div`
-  margin-top: 10px;
-  padding-top: 15px;
-  border-top: 1px solid ${(props) => props.theme.border};
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 20px;
+  background: ${(props) => props.theme.bg === '#0f172a' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(106, 17, 203, 0.03)'};
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 15px;
+  border: 1px solid ${(props) => props.theme.border};
 
-  @media (min-width: 600px) {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1.8fr 1fr; 
+    align-items: start;
   }
 `;
 
@@ -562,21 +575,24 @@ export const TimeChip = styled.button`
 
 export const NativeTimeChip = styled.input`
   background: ${(props) => props.$active ? 'linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%)' : props.theme.bg};
-  color: ${(props) => props.$active ? '#fff' : props.theme.textSec};
-  border: 1px solid ${(props) => props.$active ? 'transparent' : props.theme.border};
-  padding: 5px 12px;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  color: ${(props) => props.$active ? '#fff' : props.theme.text};
+  border: 1px solid ${(props) => props.$active ? 'transparent' : 'rgba(106, 17, 203, 0.3)'};
+  
+  padding: 0 12px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
-  height: 35px;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     border-color: #1dd1a1;
-    color: ${(props) => props.$active ? '#fff' : props.theme.text};
   }
 
   &::-webkit-calendar-picker-indicator {

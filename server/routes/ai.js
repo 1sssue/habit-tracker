@@ -2,33 +2,50 @@ const router = require('express').Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const verify = require('../middleware/verifyToken');
 
-const calculateStreak = (completedDates) => {
-    if (!completedDates || completedDates.length === 0) return 0;
-    const datesSet = new Set(completedDates);
-    let streak = 0; 
-    let currentDate = new Date(); 
-    let dateStr = currentDate.toISOString().split('T')[0];
+const checkDateStr = (dateObj) => {
+    const d = new Date(dateObj);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+};
+
+const isDayRequired = (dateObj, habit) => {
+    if (!habit) return false;
+    if (habit.frequency === 'daily') return true;
+    if (habit.frequency === 'weekly') return dateObj.getDay().toString() === habit.weeklyDay;
+    if (habit.frequency === 'monthly') return dateObj.getDate().toString() === habit.monthlyDay;
+    if (habit.frequency === 'specific_days') return habit.specificDays.includes(dateObj.getDay());
+    if (habit.frequency === 'once') return checkDateStr(dateObj) === habit.reminderDate;
+    return true;
+};
+
+const calculateStreak = (habit) => {
+    if (!habit.completedDates || habit.completedDates.length === 0) return 0;
     
-    if (datesSet.has(dateStr)) { 
-        streak++; 
-        currentDate.setDate(currentDate.getDate() - 1); 
-    } else {
-        currentDate.setDate(currentDate.getDate() - 1); 
-        dateStr = currentDate.toISOString().split('T')[0];
-        if (datesSet.has(dateStr)) { 
-            streak++; 
-            currentDate.setDate(currentDate.getDate() - 1); 
-        } else { 
-            return 0; 
-        }
-    }
+    const datesSet = new Set(habit.completedDates);
+    let streak = 0;
+    
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    const todayStr = checkDateStr(currentDate);
+
     while (true) {
-        dateStr = currentDate.toISOString().split('T')[0];
-        if (datesSet.has(dateStr)) { 
-            streak++; 
-            currentDate.setDate(currentDate.getDate() - 1); 
-        } else { 
-            break; 
+        if (!isDayRequired(currentDate, habit)) {
+            currentDate.setDate(currentDate.getDate() - 1);
+            continue; 
+        }
+
+        let loopDateStr = checkDateStr(currentDate);
+        
+        if (datesSet.has(loopDateStr)) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+            if (loopDateStr === todayStr) {
+                currentDate.setDate(currentDate.getDate() - 1);
+                continue;
+            } else {
+                break; 
+            }
         }
     }
     return streak;
@@ -44,16 +61,25 @@ router.post('/suggest', verify, async (req, res) => {
             });
         }
 
-        const today = new Date().toISOString().split('T')[0];
+        const todayObj = new Date();
+        const todayStr = checkDateStr(todayObj);
         let habitsContext = "У користувача поки немає створених звичок.";
 
         if (habits && habits.length > 0) {
             habitsContext = habits.map(h => {
-                const currentStreak = calculateStreak(h.completedDates);
-                const isDoneToday = h.completedDates?.includes(today);
+                const currentStreak = calculateStreak(h);
+                const isDoneToday = h.completedDates?.includes(todayStr);
+                const isRequiredToday = isDayRequired(todayObj, h);
                 const reminder = h.reminderTime ? `Нагадування о ${h.reminderTime}` : "Без нагадування";
                 
-                return `- "${h.title}": Поточна серія: ${currentStreak} днів поспіль. Сьогодні: ${isDoneToday ? 'Виконано' : 'НЕ виконано'}. ${reminder}.`;
+                let statusStr = "";
+                if (isRequiredToday) {
+                    statusStr = isDoneToday ? 'Виконано' : 'НЕ виконано (ОБОВ\'ЯЗКОВО зробити сьогодні)';
+                } else {
+                    statusStr = 'Сьогодні вихідний (виконувати не потрібно)';
+                }
+                
+                return `- "${h.title}": Поточна серія: ${currentStreak} разів підряд. Статус на сьогодні: ${statusStr}. ${reminder}.`;
             }).join('\n');
         }
 
@@ -62,16 +88,17 @@ router.post('/suggest', verify, async (req, res) => {
 
         const prompt = `
 Ти — емпатичний, але цілеспрямований професійний тренер з продуктивності. 
-Ось поточна статистика звичок твого клієнта, де головний показник — це безперервна серія днів (streak):
+Ось поточна статистика звичок твого клієнта, де головний показник — це безперервна серія (streak):
 
 ${habitsContext}
 
 Твоє завдання: Дати 1 конкретну, мотиваційну та коротку пораду (максимум 3-4 речення) українською мовою.
 
 ПРАВИЛА АНАЛІЗУ:
-- Якщо є звички з довгою серією (більше 3-5 днів), які сьогодні ще НЕ виконані: терміново нагадай, як важливо не розірвати цей ланцюжок сьогодні!
-- Якщо серія перервалася (0 днів): підтримай клієнта. Скажи, що пропускати дні — це нормально, головне не пропускати два дні поспіль.
-- Якщо клієнт має довгу серію і сьогодні вже виконав звичку: похвали його стабільність.
+- Якщо є звички з довгою серією, які ОБОВ'ЯЗКОВО треба зробити сьогодні, але вони ще НЕ виконані: терміново нагадай, як важливо не розірвати цей ланцюжок сьогодні!
+- ІГНОРУЙ звички зі статусом "Сьогодні вихідний". НЕ нагадуй про них і НЕ кажи, що вони не виконані.
+- Якщо серія перервалася (0 днів): підтримай клієнта. Скажи, що помилятися — це нормально, головне повертатися до роботи.
+- Якщо клієнт має довгу серію і сьогодні вже виконав потрібні звички: похвали його стабільність.
 - Якщо звичок немає: запропонуй 1 просту звичку для старту.
 
 ВАЖЛИВО: Пиши одразу пораду. Без вступних фраз ("Привіт", "Ось моя порада"). Звертайся на "ти", використовуй емодзі для підтримки.
@@ -83,6 +110,11 @@ ${habitsContext}
         res.json({ advice: text });
     } catch (error) {
         console.error("Помилка ШІ:", error);
+        
+        if (error.status === 503 || (error.message && error.message.includes("503"))) {
+            return res.status(503).json({ error: "Сервери Google (Gemini) зараз перевантажені запитами з усього світу. Зачекайте хвилинку і спробуйте ще раз! ⏳" });
+        }
+
         res.status(500).json({ error: "Не вдалося зв'язатися з ШІ-асистентом. Спробуйте пізніше." });
     }
 });
@@ -98,10 +130,11 @@ router.post('/breakdown', verify, async (req, res) => {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const prompt = `Ти експерт з продуктивності. Клієнт хоче досягти такої цілі: "${goal}".
-        Розбий цю ціль на 3-5 конкретних, щоденних мікро-звичок. 
-        Поверни ТІЛЬКИ валідний JSON-масив об'єктів без жодного іншого тексту, пояснень чи markdown-розмітки (без \`\`\`json).
-        Формат масиву має бути строго таким: 
+        const prompt = `Ти експерт з продуктивності. Клієнт хоче досягти цілі: "${goal}".
+        Навіть якщо запит дуже короткий (1-2 слова, наприклад "спорт", "читати", "вода", "англійська"), самостійно додумай логічний контекст і розбий цю ціль на 3-5 щоденних мікро-звичок. 
+        
+        ВІДПОВІДАЙ ВИКЛЮЧНО ВАЛІДНИМ JSON-МАСИВОМ! Без жодних привітань, пояснень чи форматування.
+        Формат має бути строго таким: 
         [
           {"title": "Назва звички", "description": "Коротка деталь (1 речення)", "reminderTime": "08:00"}
         ]`;
@@ -109,13 +142,26 @@ router.post('/breakdown', verify, async (req, res) => {
         const result = await model.generateContent(prompt);
         let text = result.response.text().trim();
         
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const match = text.match(/\[[\s\S]*\]/);
         
-        const habits = JSON.parse(text); // Перетворюємо текст на реальний масив
+        if (!match) {
+            throw new Error("AI response didn't contain a valid JSON array");
+        }
+        
+        const habits = JSON.parse(match[0]); 
         res.json(habits);
     } catch (error) {
         console.error("Помилка генерації мікро-звичок:", error);
-        res.status(500).json({ error: "Не вдалося згенерувати звички. Спробуйте інший запит." });
+        
+        if (error.status === 503 || (error.message && error.message.includes("503"))) {
+            return res.status(503).json({ error: "Сервери Google зараз перевантажені. Зачекайте хвилинку і спробуйте ще раз! ⏳" });
+        }
+
+        if (error.status === 429 || (error.message && error.message.includes("429"))) {
+            return res.status(429).json({ error: "ШІ трохи втомився від кількості запитів 😅. Зачекайте хвилину і натисніть кнопку знову!" });
+        }
+
+        res.status(500).json({ error: "ШІ не зміг розібрати ціль. Спробуй написати трохи детальніше (наприклад, 'почати бігати' замість 'біг')." });
     }
 });
 

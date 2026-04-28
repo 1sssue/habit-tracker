@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaSave, FaTimes, FaCamera, FaEnvelope, FaLock, FaShieldAlt, FaQuestionCircle } from "react-icons/fa";
+import { FaArrowLeft, FaEdit, FaSave, FaTimes, FaCamera, FaEnvelope, FaLock, FaShieldAlt, FaQuestionCircle, FaTrash } from "react-icons/fa";
 
 import {
   PageWrapper, MainContainer, HeaderBar, BackBtn, PageTitle, ProfileCard,
@@ -28,13 +28,19 @@ const Profile = () => {
 
   const API_URL = "https://habit-tracker-wtyx.onrender.com/api";
 
+  const getDefaultAvatar = (username) => `https://ui-avatars.com/api/?name=${username}&background=1dd1a1&color=fff&size=150`;
+
   useEffect(() => {
     if (!userToken) return navigate("/login");
 
     const fetchMe = async () => {
       try {
         const res = await axios.get(`${API_URL}/users/me`, { headers: { "auth-token": userToken } });
-        setFormData({ username: res.data.username, email: res.data.email, avatar: res.data.avatar || `https://ui-avatars.com/api/?name=${res.data.username}&background=1dd1a1&color=fff&size=150` });
+        setFormData({ 
+          username: res.data.username, 
+          email: res.data.email, 
+          avatar: res.data.avatar || getDefaultAvatar(res.data.username) 
+        });
         setStats(res.data.stats);
       } catch (err) { console.error(err); }
     };
@@ -82,12 +88,37 @@ const Profile = () => {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) return setMessage({ text: "Помилка: Розмір фото не має перевищувати 2MB", isError: true });
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => setFormData({ ...formData, avatar: reader.result });
-    }
+    if (!file) return;
+
+    setMessage({ text: "Обробка фото...", isError: false });
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = Math.min(img.width, img.height);
+        const startX = (img.width - size) / 2;
+        const startY = (img.height - size) / 2;
+
+        const canvas = document.createElement("canvas");
+        const targetSize = 256; 
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, startX, startY, size, size, 0, 0, targetSize, targetSize);
+
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+        setFormData({ ...formData, avatar: compressedBase64 });
+        setMessage({ text: "", isError: false });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData({ ...formData, avatar: getDefaultAvatar(formData.username) });
   };
 
   const expPercentage = stats ? (stats.currentExp / stats.expToNextLevel) * 100 : 0;
@@ -138,13 +169,41 @@ const Profile = () => {
           <AvatarSection>
             <AvatarWrapper $isEditing={isEditing} onClick={() => isEditing && fileInputRef.current.click()}>
               <img src={formData.avatar} alt="Avatar" />
-              <AvatarOverlay className="overlay">
-                <FaCamera />
-                <span>Змінити</span>
-              </AvatarOverlay>
+              {isEditing && (
+                <AvatarOverlay className="overlay">
+                  <FaCamera />
+                  <span>Змінити</span>
+                </AvatarOverlay>
+              )}
             </AvatarWrapper>
-            <HiddenFileInput type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} />
-            {isEditing && <FileHint>Максимальний розмір: 2MB (бажано квадратне фото)</FileHint>}
+            
+            {isEditing && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                <button 
+                  type="button" 
+                  onClick={handleRemovePhoto}
+                  style={{ 
+                    background: 'rgba(255, 107, 107, 0.1)', 
+                    border: '1px solid rgba(255, 107, 107, 0.3)', 
+                    color: '#ff6b6b', 
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    cursor: 'pointer', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '600',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    transition: '0.2s'
+                  }}
+                >
+                  <FaTrash /> Видалити фото
+                </button>
+                <FileHint>Фото автоматично обріжеться у квадрат</FileHint>
+              </div>
+            )}
+            
+            <HiddenFileInput type="file" ref={fileInputRef} onChange={handleImageUpload} />
           </AvatarSection>
 
           <FormGroup>
